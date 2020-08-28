@@ -6,8 +6,9 @@ from datetime import datetime
 import sys
 import os
 import json
-
 import logging
+from dotenv import load_dotenv
+load_dotenv()
 # logging.basicConfig(filename='debug_log.log',level=print)
 
 TABLE_NAME = "publications"
@@ -253,10 +254,10 @@ def insert_objects(table, all_parsed_dict, mag_info):
 
 
 cnx = mysql.connector.connect(
-  host="127.0.0.1",
-  user="root",
-  passwd="docker",
-  database="minhamarca",
+  host=os.getenv("MINHAMARCA_KERNEL_DB_HOST"),
+  user=os.getenv("MINHAMARCA_KERNEL_DB_USER"),
+  passwd=os.getenv("MINHAMARCA_KERNEL_DB_PASS"),
+  database=os.getenv("MINHAMARCA_KERNEL_DB_NAME"),
   auth_plugin='mysql_native_password'
 )
 
@@ -283,7 +284,7 @@ def process_file(filepath):
             all_parsed_objects.append(parsed_object)
     create_tables(TABLE_NAME,all_parsed_objects)
     insert_objects(TABLE_NAME,all_parsed_objects, mag)
-    # set_users_to_notificate(all_parsed_objects, mag)
+    set_users_to_notificate(all_parsed_objects, mag)
 
 def set_users_to_notificate(objects, mag):
     print("[Creating Notifications] ...")
@@ -294,14 +295,14 @@ def set_users_to_notificate(objects, mag):
     result_set = cursor.fetchall()
     user_to_notificate = []
     for rs in result_set:
-        user_to_notificate.append([rs[1], "PENDING", "Temos Novidades", "Saiu uma nova atualização do seu processo na revista: "+str(mag['numero'])+". Abra o app para acompanhar."])
-    insert_query = "INSERT INTO user_notifications (user_id, status, notification_title, notification_body) VALUES (%s, %s, %s, %s)"
+        user_to_notificate.append([rs[1], "PENDING", "Temos Novidades", "Saiu uma nova atualização do seu processo: "+str(rs[2])+" na revista: "+str(mag['numero'])+" do dia "+str(mag['data'])+". Abra o app para acompanhar.", str(rs[2])])
+    insert_query = "INSERT INTO notifications (user_id, status, subject, body, process, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, now(), now())"
     cursor.executemany(insert_query, user_to_notificate)
     cnx.commit()
 
 
-BASE_FILE_DIR = "to_process"
-FROM_FILE_DIR = "processed"
+BASE_FILE_DIR = "mags/to_process"
+FROM_FILE_DIR = "mags/processed"
 
 
 # process_file("to_process/2515.xml")
