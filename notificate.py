@@ -26,9 +26,8 @@ def get_users_to_notificate():
     for rs in result_set:
         resp_code = send_notification(rs[0], rs[4], rs[5])
         if resp_code == 200:
-            print("ok")
-        #   cursor.execute("UPDATE user_notifications SET status = 'DELIVERED' WHERE id ="+str(rs[1]))
-        #   cnx.commit()
+          cursor.execute("UPDATE notifications SET status = 'SEND' WHERE id ="+str(rs[1]))
+          cnx.commit()
 
 
 def send_notification(player_id, notification_title, notification_body):

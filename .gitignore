@@ -1,3 +1,5 @@
 to_process/
 processed/
 *.log
+mags/*
+leads/
